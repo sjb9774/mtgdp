@@ -1,0 +1,4 @@
+.venv/
+.idea/
+pricing/
+__pycache__/
