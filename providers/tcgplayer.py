@@ -1,6 +1,7 @@
 from providers.provider import PriceProvider
 from apis import tcgplayer
 import json
+import datetime
 
 
 class TcgPlayerPricing(PriceProvider):
@@ -19,6 +20,7 @@ class TcgPlayerPricing(PriceProvider):
 		return cred_data
 
 	def get_pricing(self, card_name=None, card_set=None, multiverse_id=None, printing_id=None, **kwargs):
+		now = datetime.datetime.now()
 		all_groups = self.get_all_groups()
 		specified_group = all_groups.get(card_set.upper())
 		if not specified_group:
@@ -37,7 +39,8 @@ class TcgPlayerPricing(PriceProvider):
 					'name': products_map[price.get('productId')].get('name'),
 					'set_code': card_set,
 					'tcgplayer_group_id': tcg_group_id,
-					'pricing': price
+					'pricing': price,
+					'date': now.strftime('%Y-%m-%d %H:%M:%S')
 				})
 		return pricing
 
