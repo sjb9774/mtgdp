@@ -2,3 +2,5 @@
 .idea/
 pricing/
 __pycache__/
+credentials/
+!credentials/*.sample.*
