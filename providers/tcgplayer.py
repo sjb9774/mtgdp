@@ -1,4 +1,5 @@
 from providers.provider import PriceProvider
+from product.identity import CardIdentity
 from apis import tcgplayer
 import json
 import datetime
@@ -34,14 +35,20 @@ class TcgPlayerPricing(PriceProvider):
 		pricing = []
 		for price in set_pricing.get('results'):
 			if products_map.get(price.get('productId')):
-				pricing.append({
-					'tcgplayer_id': price.get('productId'),
-					'name': products_map[price.get('productId')].get('name'),
-					'set_code': card_set,
-					'tcgplayer_group_id': tcg_group_id,
-					'pricing': price,
-					'date': now.strftime('%Y-%m-%d %H:%M:%S')
-				})
+				product = products_map[price.get('productId')]
+				collector_number = None
+				for data in product.get('extendedData'):
+					if data.get('name') == 'Number':
+						collector_number = data.get('value')
+
+				identity = CardIdentity(
+					name=product.get('name'),
+					collector_number=collector_number,
+					set_code=card_set
+				).get_identity()
+				identity['pricing'] = price
+				identity['date'] = now.strftime('%Y-%m-%d %H:%M:%S')
+				pricing.append(identity)
 		return pricing
 
 	def get_group_pricing(self, group_id):
@@ -59,7 +66,11 @@ class TcgPlayerPricing(PriceProvider):
 			http_method='GET',
 			headers={'Authorization': f'Bearer {self.get_token()}'},
 			versioned=False,
-			query_params={'groupId': group_id, 'categoryId': 1}
+			query_params={
+				'groupId': group_id,
+				'categoryId': 1,
+				'getExtendedFields': True
+			}
 		)
 		card_objects = []
 		for cards_results in set_cards:

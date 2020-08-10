@@ -2,6 +2,7 @@
 from argparse import ArgumentParser
 from providers.scryfall import ScryfallPricing
 from providers.tcgplayer import TcgPlayerPricing
+from product.identity import CardIdentity
 import json
 import datetime
 from pathlib import Path
@@ -26,6 +27,8 @@ if __name__ == "__main__":
 			for set_code in args.set_codes:
 				print(f"Retrieving pricing for {set_code} from '{provider}' provider")
 				set_pricing = pricing_provider.get_pricing(card_set=set_code)
+
+
 				pricing_json = json.dumps(set_pricing)
 				pricing_path = f'pricing/{date_timestamp}'
 				pricing_filename = f'FULL-SET_{set_code}-{provider}-{datetime_timestamp}.json'

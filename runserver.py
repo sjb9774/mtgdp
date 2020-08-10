@@ -1,5 +1,4 @@
-from flask import Flask
-
-app = Flask(__name__)
+from webapp.app import app
+from webapp.views.home import index
 
 app.run(debug=True)
