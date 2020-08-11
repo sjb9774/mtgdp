@@ -14,7 +14,9 @@ def get_chart_pricing(set_code, collector_number):
 		with open(filename, 'r') as f:
 			pricing_data = json.loads(f.read())
 			for price_datum in pricing_data:
-				if price_datum.get('collector_number') == collector_number and price_datum.get('pricing').get('subTypeName') == 'Normal':
+				if price_datum.get('collector_number') == collector_number \
+						and 'token' not in price_datum.get('name').lower() \
+						and (price_datum.get('foil') == False or price_datum.get('pricing', {}).get('subTypeName') == 'Normal'):
 					# TODO: Break out foil and normal pricing
 					pricing_json.append(price_datum)
 		pricing_json = sorted(pricing_json, key=itemgetter('date'))

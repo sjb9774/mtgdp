@@ -27,7 +27,7 @@ var chartifySetPricing = function(selector, setCode, collectorNumber) {
 
         // Add Y axis
         var y = d3.scaleLinear()
-          .domain([0, d3.max(data, function(d) { return +d.pricing.marketPrice; })])
+          .domain([0, d3.max(data, function(d) { return +d.pricing.highPrice || d.pricing.high_price; })])
           .range([ height, 0 ]);
         svg.append("g")
           .call(d3.axisLeft(y));
@@ -43,9 +43,37 @@ var chartifySetPricing = function(selector, setCode, collectorNumber) {
                 return x(new Date(d.date));
             })
             .y(function(d) {
-                return y(d.pricing.marketPrice);
+                return y(d.pricing.marketPrice || d.pricing.market_price);
             })
-            )
+            );
+
+        svg.append("path")
+          .datum(data)
+          .attr("fill", "none")
+          .attr("stroke", "green")
+          .attr("stroke-width", 1)
+          .attr("d", d3.line()
+            .x(function(d) {
+                return x(new Date(d.date));
+            })
+            .y(function(d) {
+                return y(d.pricing.lowPrice || d.pricing.low_price);
+            })
+            );
+
+        svg.append("path")
+          .datum(data)
+          .attr("fill", "none")
+          .attr("stroke", "red")
+          .attr("stroke-width", 1)
+          .attr("d", d3.line()
+            .x(function(d) {
+                return x(new Date(d.date));
+            })
+            .y(function(d) {
+                return y(d.pricing.highPrice || d.pricing.high_price);
+            })
+            );
 
     });
 };

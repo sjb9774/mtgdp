@@ -47,6 +47,10 @@ class TcgPlayerPricing(PriceProvider):
 				product = products_map[price.get('productId')]
 				collector_number = None
 				for data in product.get('extendedData'):
+					if data.get('name') == 'Rarity' and data.get('value') == 'T':
+						# tokens can share collector's numbers with cards, which goofs up graphs :(
+						collector_number = None
+						break
 					if data.get('name') == 'Number':
 						collector_number = data.get('value')
 

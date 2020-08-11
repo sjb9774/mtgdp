@@ -13,6 +13,7 @@ if __name__ == "__main__":
 	argparser = ArgumentParser()
 	argparser.add_argument('-s', '--set-codes', nargs='+', required=True)
 	argparser.add_argument('-p', '--pricing-providers', nargs='+', required=True, choices=['scryfall', 'tcgplayer'])
+	argparser.add_argument('-r', '--recorders', nargs='+', required=False, choices=['json', 'db'], default=['json'])
 	args = argparser.parse_args()
 	now = datetime.datetime.now()
 	date_timestamp = now.strftime('%Y-%m-%d')
@@ -33,7 +34,7 @@ if __name__ == "__main__":
 					'json': JSONCardPriceRecorder(filepath=f'pricing/{date_timestamp}/FULL-SET_{set_code}-{provider}-{datetime_timestamp}.json'),
 					'db': DBPriceRecorder()
 				}
-				recorder = recorders.get('json')
-				recorder.record_prices(set_pricing)
-
-				print(f"Finished writing pricing for {set_code} from '{provider}' provider with recorder '{recorder}'")
+				for recorder in args.recorders:
+					recorder = recorders.get(recorder)
+					recorder.record_prices(set_pricing)
+					print(f"Finished writing pricing for {set_code} from '{provider}' provider with recorder '{recorder}'")
