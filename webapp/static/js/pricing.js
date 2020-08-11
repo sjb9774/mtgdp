@@ -1,4 +1,4 @@
-var chartifySetPricing = function(selector, setCode) {
+var chartifySetPricing = function(selector, setCode, collectorNumber) {
     // set the dimensions and margins of the graph
     var margin = {top: 10, right: 30, bottom: 30, left: 60},
         width = 460 - margin.left - margin.right,
@@ -13,19 +13,13 @@ var chartifySetPricing = function(selector, setCode) {
         .attr("transform",
               "translate(" + margin.left + "," + margin.top + ")");
 
-    d3.json("/pricing/chart/2xm",
-
-      // When reading the csv, I must format variables:
-      function(d){
-        return { date : d3.timeParse("%Y-%m-%d")(d.date), value : d.value }
-      },
-
-      // Now I can use this dataset:
+    d3.json(`/pricing/chart/${setCode}/${collectorNumber}`,
       function(data) {
-
         // Add X axis --> it is a date format
         var x = d3.scaleTime()
-          .domain(d3.extent(data, function(d) { return d.date; }))
+          .domain(d3.extent(data, function(d) {
+              return new Date(d.date);
+          }))
           .range([ 0, width ]);
         svg.append("g")
           .attr("transform", "translate(0," + height + ")")
@@ -33,7 +27,7 @@ var chartifySetPricing = function(selector, setCode) {
 
         // Add Y axis
         var y = d3.scaleLinear()
-          .domain([0, d3.max(data, function(d) { return +d.value; })])
+          .domain([0, d3.max(data, function(d) { return +d.pricing.marketPrice; })])
           .range([ height, 0 ]);
         svg.append("g")
           .call(d3.axisLeft(y));
@@ -45,9 +39,17 @@ var chartifySetPricing = function(selector, setCode) {
           .attr("stroke", "steelblue")
           .attr("stroke-width", 1.5)
           .attr("d", d3.line()
-            .x(function(d) { return x(d.date) })
-            .y(function(d) { return y(d.value) })
+            .x(function(d) {
+                return x(new Date(d.date));
+            })
+            .y(function(d) {
+                return y(d.pricing.marketPrice);
+            })
             )
 
     });
+};
+
+window.onload = function () {
+    chartifySetPricing('#pricing-chart', SET_CODE, COLLECTOR_NUMBER);
 };

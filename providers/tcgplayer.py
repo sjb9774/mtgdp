@@ -1,5 +1,6 @@
 from providers.provider import PriceProvider
 from product.identity import CardIdentity
+from product.pricing import CardPricing
 from apis import tcgplayer
 import json
 import datetime
@@ -41,12 +42,18 @@ class TcgPlayerPricing(PriceProvider):
 					if data.get('name') == 'Number':
 						collector_number = data.get('value')
 
-				identity = CardIdentity(
+				identity = self.get_card_identity(
 					name=product.get('name'),
 					collector_number=collector_number,
 					set_code=card_set
-				).get_identity()
-				identity['pricing'] = price
+				)
+				card_pricing = self.get_card_pricing(
+					low_price=price.get('lowPrice'),
+					mid_price=price.get('midPrice'),
+					high_price=price.get('highPrice'),
+					market_price=price.get('marketPrice')
+				)
+				identity['pricing'] = card_pricing
 				identity['date'] = now.strftime('%Y-%m-%d %H:%M:%S')
 				pricing.append(identity)
 		return pricing
@@ -113,4 +120,12 @@ class TcgPlayerPricing(PriceProvider):
 				for group in group_info:
 					self.groups[group.get('abbreviation', group.get('name'))] = group
 		return self.groups
+
+	def get_card_identity(self, name=None, collector_number=None, set_code=None):
+		identity = CardIdentity(name=name, collector_number=collector_number, set_code=set_code)
+		return identity.get_identity()
+
+	def get_card_pricing(self, low_price=None, mid_price=None, high_price=None, market_price=None):
+		pricing = CardPricing(low_price=low_price, mid_price=mid_price, high_price=high_price, market_price=market_price)
+		return pricing.get_pricing()
 
