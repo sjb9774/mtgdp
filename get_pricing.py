@@ -2,6 +2,7 @@
 from argparse import ArgumentParser
 from providers.scryfall import ScryfallPricing
 from providers.tcgplayer import TcgPlayerPricing
+from recorders.pricerecorder import JSONCardPriceRecorder, DBPriceRecorder
 from product.identity import CardIdentity
 import json
 import datetime
@@ -21,18 +22,18 @@ if __name__ == "__main__":
 		'scryfall': ScryfallPricing(),
 		'tcgplayer': TcgPlayerPricing()
 	}
+
 	for provider in args.pricing_providers:
 		pricing_provider = provider_map.get(provider)
 		if pricing_provider:
 			for set_code in args.set_codes:
 				print(f"Retrieving pricing for {set_code} from '{provider}' provider")
 				set_pricing = pricing_provider.get_pricing(card_set=set_code)
+				recorders = {
+					'json': JSONCardPriceRecorder(filepath=f'pricing/{date_timestamp}/FULL-SET_{set_code}-{provider}-{datetime_timestamp}.json'),
+					'db': DBPriceRecorder()
+				}
+				recorder = recorders.get('json')
+				recorder.record_prices(set_pricing)
 
-
-				pricing_json = json.dumps(set_pricing)
-				pricing_path = f'pricing/{date_timestamp}'
-				pricing_filename = f'FULL-SET_{set_code}-{provider}-{datetime_timestamp}.json'
-				Path(pricing_path).mkdir(parents=True, exist_ok=True)
-				with open(f'{pricing_path}/{pricing_filename}', 'w+') as f:
-					f.write(pricing_json)
-				print(f"Finished writing pricing for {set_code} from '{provider}' provider to '{pricing_path}/{pricing_filename}'")
+				print(f"Finished writing pricing for {set_code} from '{provider}' provider with recorder '{recorder}'")

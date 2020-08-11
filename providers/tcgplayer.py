@@ -1,9 +1,10 @@
 from providers.provider import PriceProvider
 from product.identity import CardIdentity
-from product.pricing import CardPricing
+from product.pricing import CardPricing, CardPriceSnapshot
 from apis import tcgplayer
 import json
 import datetime
+from typing import List
 
 
 class TcgPlayerPricing(PriceProvider):
@@ -16,12 +17,19 @@ class TcgPlayerPricing(PriceProvider):
 		self.groups = {}
 		self.bearer_token = None
 
-	def read_credentials(self):
+	def read_credentials(self) -> dict:
 		with open('credentials/tcgplayer.json', 'r') as f:
 			cred_data = json.loads(f.read())
 		return cred_data
 
-	def get_pricing(self, card_name=None, card_set=None, multiverse_id=None, printing_id=None, **kwargs):
+	def get_pricing(
+		self,
+		card_name=None,
+		card_set=None,
+		multiverse_id=None,
+		printing_id=None,
+		**kwargs
+	) -> List[CardPriceSnapshot]:
 		now = datetime.datetime.now()
 		all_groups = self.get_all_groups()
 		specified_group = all_groups.get(card_set.upper())
@@ -45,7 +53,8 @@ class TcgPlayerPricing(PriceProvider):
 				identity = self.get_card_identity(
 					name=product.get('name'),
 					collector_number=collector_number,
-					set_code=card_set
+					set_code=card_set,
+					foil=price.get('subTypeName') and price.get('subTypeName').lower() == 'foil'
 				)
 				card_pricing = self.get_card_pricing(
 					low_price=price.get('lowPrice'),
@@ -53,12 +62,11 @@ class TcgPlayerPricing(PriceProvider):
 					high_price=price.get('highPrice'),
 					market_price=price.get('marketPrice')
 				)
-				identity['pricing'] = card_pricing
-				identity['date'] = now.strftime('%Y-%m-%d %H:%M:%S')
-				pricing.append(identity)
+				snapshot = CardPriceSnapshot(pricing=card_pricing, identity=identity, timestamp=now)
+				pricing.append(snapshot)
 		return pricing
 
-	def get_group_pricing(self, group_id):
+	def get_group_pricing(self, group_id: int) -> dict:
 		prices = tcgplayer.send_request(
 			f'pricing/group/{group_id}',
 			http_method='GET',
@@ -67,7 +75,7 @@ class TcgPlayerPricing(PriceProvider):
 		)
 		return prices
 
-	def get_group_items(self, group_id):
+	def get_group_items(self, group_id: int) -> List[dict]:
 		set_cards = self.auto_paginate(
 			'catalog/products',
 			http_method='GET',
@@ -84,7 +92,7 @@ class TcgPlayerPricing(PriceProvider):
 			card_objects.extend(cards_results.get('results'))
 		return card_objects
 
-	def auto_paginate(self, *args, **kwargs):
+	def auto_paginate(self, *args, **kwargs) -> list:
 		responses = []
 		offset = 0
 		limit = 100
@@ -102,12 +110,12 @@ class TcgPlayerPricing(PriceProvider):
 				break
 		return responses
 
-	def get_token(self):
+	def get_token(self) -> str:
 		if not self.bearer_token:
 			self.bearer_token = tcgplayer.get_bearer_token(public_key=self.public_key, private_key=self.private_key)
 		return self.bearer_token.get_value()
 
-	def get_all_groups(self):
+	def get_all_groups(self) -> dict:
 		if not self.groups:
 			all_responses = self.auto_paginate(
 				'catalog/categories/1/groups',
@@ -121,11 +129,17 @@ class TcgPlayerPricing(PriceProvider):
 					self.groups[group.get('abbreviation', group.get('name'))] = group
 		return self.groups
 
-	def get_card_identity(self, name=None, collector_number=None, set_code=None):
-		identity = CardIdentity(name=name, collector_number=collector_number, set_code=set_code)
-		return identity.get_identity()
+	def get_card_identity(self, name=None, collector_number=None, set_code=None, foil=None) -> CardIdentity:
+		identity = CardIdentity(name=name, collector_number=collector_number, set_code=set_code, foil=foil)
+		return identity
 
-	def get_card_pricing(self, low_price=None, mid_price=None, high_price=None, market_price=None):
+	def get_card_pricing(
+		self,
+		low_price: float = None,
+		mid_price: float = None,
+		high_price: float = None,
+		market_price: float = None
+	) -> CardPricing:
 		pricing = CardPricing(low_price=low_price, mid_price=mid_price, high_price=high_price, market_price=market_price)
-		return pricing.get_pricing()
+		return pricing
 

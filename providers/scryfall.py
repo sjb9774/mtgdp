@@ -1,4 +1,7 @@
 from providers.provider import PriceProvider
+from product.pricing import CardPriceSnapshot, CardPricing
+from product.identity import CardIdentity
+from typing import List
 import requests
 import time
 import datetime
@@ -14,7 +17,14 @@ class ScryfallPricing(PriceProvider):
 	def get_price_categories(self):
 		return ['usd', 'usd_foil']
 
-	def get_pricing(self, card_name=None, card_set=None, multiverse_id=None, printing_id=None, **kwargs):
+	def get_pricing(
+		self,
+		card_name=None,
+		card_set=None,
+		multiverse_id=None,
+		printing_id=None,
+		**kwargs
+	) -> List[CardPriceSnapshot]:
 		now = datetime.datetime.now()
 		query = ''
 		if card_name:
@@ -33,14 +43,25 @@ class ScryfallPricing(PriceProvider):
 			cards.extend(response.get('data'))
 		prices = []
 		for card in cards:
-			prices.append({
-				'multiverse_ids': card.get('multiverse_ids'),
-				'name': card.get('name'),
-				'collector_number': card.get('collector_number'),
-				'set_code': card.get('set'),
-				'pricing': card.get('prices'),
-				'date': now.strftime('%Y-%m-%d %H:%M:%S')
-			})
+			if card.get('prices', {}).get('usd'):
+				normal_pricing = CardPricing(market_price=card.get('prices', {}).get('usd'))
+				normal_identity = CardIdentity(
+					set_code=card.get('set'),
+					collector_number=card.get('collector_number'),
+					foil=False,
+					name=card.get('name')
+				)
+				prices.append(CardPriceSnapshot(identity=normal_identity, pricing=normal_pricing, timestamp=now))
+			if card.get('prices', {}).get('usd_foil'):
+				foil_identity = CardIdentity(
+					set_code=card.get('set'),
+					collector_number=card.get('collector_number'),
+					foil=True,
+					name=card.get('name')
+				)
+				foil_pricing = CardPricing(market_price=card.get('prices', {}).get('usd_foil'))
+				prices.append(CardPriceSnapshot(identity=foil_identity, pricing=foil_pricing, timestamp=now))
+
 		return prices
 
 	def request_api(self, *args, **kwargs):
