@@ -1,5 +1,6 @@
 from product.identity import ProductIdentity, CardIdentity
 from product.pricing import ProductPricing, CardPricing, CardPriceSnapshot, PriceSnapshot
+from product.repository import CardSnapshotRepository
 from typing import List
 import json
 from pathlib import Path
@@ -44,4 +45,6 @@ class JSONCardPriceRecorder(PriceRecorder):
 class DBPriceRecorder(PriceRecorder):
 
 	def record_prices(self, snapshots: List[CardPriceSnapshot]):
-		pass
+		repo = CardSnapshotRepository()
+		for snapshot in snapshots:
+			repo.save(snapshot)

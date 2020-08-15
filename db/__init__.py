@@ -1,9 +1,12 @@
 from sqlalchemy import create_engine
+import sqlalchemy
 import MySQLdb
 import json
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 Base = declarative_base()
+DB_NAME = 'mtgdp'
 
 
 def get_connection_config():
@@ -12,19 +15,12 @@ def get_connection_config():
 	return config
 
 
-def get_connection(username=None, password=None, host=None):
-	return MySQLdb.connect(
-		user=username,
-		password=password,
-		host=host
-	)
-
-
-def get_connection_from_config():
-	config = get_connection_config()
-	return get_connection(**config)
-
-
 def get_engine():
 	config = get_connection_config()
-	return create_engine(f'mysql+mysqldb://{config.get("username")}:{config.get("password")}@{config.get("host")}/mtgdp')
+	connection_str = f'mysql+mysqldb://{config.get("username")}:{config.get("password")}@{config.get("host")}/{DB_NAME}'
+	return create_engine(connection_str)
+
+
+def get_session() -> sqlalchemy.orm.session.Session:
+	Session = sessionmaker(bind=get_engine())
+	return Session()

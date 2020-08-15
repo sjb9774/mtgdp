@@ -13,4 +13,4 @@ class CardIdentity(Base):
 	collector_number = Column(String(255))
 	foil = Column(Boolean)
 
-	snapshots = relationship("CardPricingSnapshot", back_populates="identity")
+	snapshots = relationship("CardPriceSnapshot", back_populates="identity", cascade="all, delete-orphan")

@@ -19,11 +19,11 @@ class CardPricing(Base):
 	price = Column(Float)
 	pricing_type_id = Column(Integer, ForeignKey(f'{CardPricingType.__tablename__}.pricing_type_id'))
 
-	snapshots = relationship("CardPricingSnapshot", back_populates="pricing")
+	snapshots = relationship("CardPriceSnapshot", back_populates="pricing", cascade="all, delete-orphan")
 	pricing_type = relationship("CardPricingType", back_populates="prices")
 
 
-class CardPricingSnapshot(Base):
+class CardPriceSnapshot(Base):
 
 	__tablename__ = 'card_pricing_snapshot'
 	snapshot_id = Column(Integer, primary_key=True)

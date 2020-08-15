@@ -4,13 +4,22 @@ import MySQLdb
 import json
 import argparse
 import getpass
-from db import get_connection_config, get_connection, get_engine, Base
+from db import get_connection_config, get_engine, Base, DB_NAME
 from product.models.identity import	CardIdentity
-from product.models.pricing import CardPricingType, CardPricing, CardPricingSnapshot
+from product.models.pricing import CardPricingType, CardPricing, CardPriceSnapshot
 
 
-DB_NAME = 'mtgdp'
+def get_connection(username=None, password=None, host=None):
+	return MySQLdb.connect(
+		user=username,
+		password=password,
+		host=host
+	)
 
+
+def get_connection_from_config():
+	config = get_connection_config()
+	return get_connection(**config)
 
 class Password(argparse.Action):
 	def __call__(self, parser, namespace, values, option_string):
