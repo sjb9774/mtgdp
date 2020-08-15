@@ -1,9 +1,8 @@
 from providers.provider import PriceProvider
 from product.pricing import CardPriceSnapshot, CardPricing
 from product.identity import CardIdentity
+from apis.scryfall import ScryfallApi
 from typing import List
-import requests
-import time
 import datetime
 
 
@@ -13,6 +12,7 @@ class ScryfallPricing(PriceProvider):
 		super().__init__()
 		self.last_request_timestamp = 0
 		self.request_spacing = .1
+		self.client = ScryfallApi()
 
 	def get_price_categories(self):
 		return ['usd', 'usd_foil']
@@ -33,42 +33,35 @@ class ScryfallPricing(PriceProvider):
 			query += f" set:{card_set}"
 		if printing_id:
 			query += f" number:{printing_id}"
-		cards = []
-		response = self.request_api('https://api.scryfall.com/cards/search', params={
-			'q': query,
-		}).json()
-		cards.extend(response.get('data'))
-		while response.get('next_page'):
-			response = self.request_api(response.get('next_page')).json()
-			cards.extend(response.get('data'))
+		response = self.client.search(query)
+
 		prices = []
-		for card in cards:
-			if card.get('prices', {}).get('usd'):
-				normal_pricing = CardPricing(market_price=card.get('prices', {}).get('usd'))
-				normal_identity = CardIdentity(
-					set_code=card.get('set'),
-					collector_number=card.get('collector_number'),
-					foil=False,
-					name=card.get('name')
-				)
-				prices.append(CardPriceSnapshot(identity=normal_identity, pricing=normal_pricing, timestamp=now))
-			if card.get('prices', {}).get('usd_foil'):
-				foil_identity = CardIdentity(
-					set_code=card.get('set'),
-					collector_number=card.get('collector_number'),
-					foil=True,
-					name=card.get('name')
-				)
-				foil_pricing = CardPricing(market_price=card.get('prices', {}).get('usd_foil'))
-				prices.append(CardPriceSnapshot(identity=foil_identity, pricing=foil_pricing, timestamp=now))
+
+		while True:
+			cards = response.get('data')
+			for card in cards:
+				if card.get('prices', {}).get('usd'):
+					normal_pricing = CardPricing(market_price=card.get('prices', {}).get('usd'))
+					normal_identity = CardIdentity(
+						set_code=card.get('set'),
+						collector_number=card.get('collector_number'),
+						foil=False,
+						name=card.get('name')
+					)
+					prices.append(CardPriceSnapshot(identity=normal_identity, pricing=normal_pricing, timestamp=now))
+				if card.get('prices', {}).get('usd_foil'):
+					foil_identity = CardIdentity(
+						set_code=card.get('set'),
+						collector_number=card.get('collector_number'),
+						foil=True,
+						name=card.get('name')
+					)
+					foil_pricing = CardPricing(market_price=card.get('prices', {}).get('usd_foil'))
+					prices.append(CardPriceSnapshot(identity=foil_identity, pricing=foil_pricing, timestamp=now))
+			if not response.get('next_page'):
+				break
+			response = self.client.request_api(response.get('next_page')).json()
 
 		return prices
 
-	def request_api(self, *args, **kwargs):
-		now = datetime.datetime.now()
-		now_timestamp = now.timestamp()
-		diff = now_timestamp - self.last_request_timestamp
-		if diff <= self.request_spacing:
-			time.sleep(.1 - self.request_spacing)
-			self.last_request_timestamp = datetime.datetime.now().timestamp()
-		return requests.get(*args, **kwargs)
+
