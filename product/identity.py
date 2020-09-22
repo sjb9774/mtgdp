@@ -1,6 +1,7 @@
 class ProductIdentity:
 
-	def get_identifying_fields(self):
+	@staticmethod
+	def get_identifying_fields():
 		return []
 
 	def get_identity(self):
@@ -18,6 +19,7 @@ class CardIdentity(ProductIdentity):
 		self.collector_number = collector_number
 		self.foil = foil
 
-	def get_identifying_fields(self):
+	@staticmethod
+	def get_identifying_fields():
 		return ['collector_number', 'set_code', 'name', 'foil']
 

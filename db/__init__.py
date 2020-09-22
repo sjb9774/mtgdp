@@ -21,6 +21,6 @@ def get_engine():
 	return create_engine(connection_str)
 
 
-def get_session() -> sqlalchemy.orm.session.Session:
+def get_session(expire_on_commit=False) -> sqlalchemy.orm.session.Session:
 	Session = sessionmaker(bind=get_engine())
-	return Session()
+	return Session(expire_on_commit=expire_on_commit)

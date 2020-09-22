@@ -4,9 +4,10 @@ import datetime
 
 class ProductPricing:
 
-	def __init__(self, price_types: list = None, pricing: dict = None):
+	def __init__(self, price_types: list = None, pricing: dict = None, provider: str = None):
 		self.pricing = {}
 		self.price_types = price_types[:]
+		self.provider = provider
 		for price_type in self.price_types:
 			self.pricing[price_type] = pricing.get(price_type)
 
@@ -30,7 +31,8 @@ class CardPricing(ProductPricing):
 		market_price: float = None,
 		low_price: float = None,
 		mid_price: float = None,
-		high_price: float = None
+		high_price: float = None,
+		provider: str = None
 	):
 		pricing = {
 			'market_price': market_price,
@@ -38,7 +40,7 @@ class CardPricing(ProductPricing):
 			'high_price': high_price,
 			'mid_price': mid_price
 		}
-		super().__init__(price_types=list(pricing.keys()), pricing=pricing)
+		super().__init__(price_types=list(pricing.keys()), pricing=pricing, provider=provider)
 
 
 class PriceSnapshot:

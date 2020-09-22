@@ -64,7 +64,7 @@ class TcgPlayerPricing(PriceProvider):
 					low_price=price.get('lowPrice'),
 					mid_price=price.get('midPrice'),
 					high_price=price.get('highPrice'),
-					market_price=price.get('marketPrice')
+					market_price=price.get('marketPrice'),
 				)
 				snapshot = CardPriceSnapshot(pricing=card_pricing, identity=identity, timestamp=now)
 				pricing.append(snapshot)
@@ -144,6 +144,12 @@ class TcgPlayerPricing(PriceProvider):
 		high_price: float = None,
 		market_price: float = None
 	) -> CardPricing:
-		pricing = CardPricing(low_price=low_price, mid_price=mid_price, high_price=high_price, market_price=market_price)
+		pricing = CardPricing(
+			low_price=low_price,
+			mid_price=mid_price,
+			high_price=high_price,
+			market_price=market_price,
+			provider="tcgplayer"
+		)
 		return pricing
 

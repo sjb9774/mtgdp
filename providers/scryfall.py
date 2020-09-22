@@ -56,7 +56,7 @@ class ScryfallPricing(PriceProvider):
 						foil=True,
 						name=card.get('name')
 					)
-					foil_pricing = CardPricing(market_price=card.get('prices', {}).get('usd_foil'))
+					foil_pricing = CardPricing(market_price=card.get('prices', {}).get('usd_foil'), provider="scryfall")
 					prices.append(CardPriceSnapshot(identity=foil_identity, pricing=foil_pricing, timestamp=now))
 			if not response.get('next_page'):
 				break

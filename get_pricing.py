@@ -32,11 +32,13 @@ if __name__ == "__main__":
 			for set_code in args.set_codes:
 				print(f"Retrieving pricing for {set_code} from '{provider}' provider")
 				set_pricing = pricing_provider.get_pricing(card_set=set_code)
+				print("Pricing retrieved.")
 				recorders = {
 					'json': JSONCardPriceRecorder(filepath=f'pricing/{date_timestamp}/FULL-SET_{set_code}-{provider}-{datetime_timestamp}.json'),
 					'db': DBPriceRecorder()
 				}
 				for recorder in args.recorders:
+					print(f"Recording using recorder '{recorder}'")
 					recorder = recorders.get(recorder)
 					recorder.record_prices(set_pricing)
 					print(f"Finished writing pricing for {set_code} from '{provider}' provider with recorder '{recorder}'")

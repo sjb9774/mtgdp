@@ -62,7 +62,7 @@ class MtgJsonPricing(PriceProvider):
 					set_code=card_set.upper(),
 					foil=False
 				)
-				normal_pricing = CardPricing(market_price=normal_price)
+				normal_pricing = CardPricing(market_price=normal_price, provider=f"mtgjson-{self.source}")
 				normal_snapshot = CardPriceSnapshot(
 					pricing=normal_pricing,
 					identity=normal_card_identity,
@@ -79,7 +79,7 @@ class MtgJsonPricing(PriceProvider):
 					set_code=card_set.upper(),
 					foil=True
 				)
-				foil_pricing = CardPricing(market_price=foil_price)
+				foil_pricing = CardPricing(market_price=foil_price, provider=f"mtgjson-{self.source}")
 				foil_snapshot = CardPriceSnapshot(pricing=foil_pricing, identity=foil_card_identity, timestamp=date)
 				snapshots.append(foil_snapshot)
 

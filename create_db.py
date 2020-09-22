@@ -6,7 +6,7 @@ import argparse
 import getpass
 from db import get_connection_config, get_engine, Base, DB_NAME
 from product.models.identity import	CardIdentity
-from product.models.pricing import CardPricingType, CardPricing, CardPriceSnapshot
+from product.models.pricing import CardPricingType, CardPricing, CardPriceSnapshot, CardPricingProvider
 
 
 def get_connection(username=None, password=None, host=None):
