@@ -1,13 +1,16 @@
 #! /usr/bin/env python
 from argparse import ArgumentParser
+from providers.provider import PriceProvider
 from providers.scryfall import ScryfallPricing
 from providers.tcgplayer import TcgPlayerPricing
 from providers.mtgjson import MtgJsonPricing
-from recorders.pricerecorder import JSONCardPriceRecorder, DBPriceRecorder
-from product.identity import CardIdentity
+from recorders.json import JSONCardPriceRecorder
+from recorders.db import DBPriceRecorder
 import json
 import datetime
 from pathlib import Path
+
+from recorders.pricerecorder import PriceRecorder
 
 
 if __name__ == "__main__":
@@ -27,7 +30,7 @@ if __name__ == "__main__":
 	datetime_timestamp = now.strftime('%Y-%m-%d_%H:%M:%S')
 
 	for provider in args.pricing_providers:
-		pricing_provider = provider_map.get(provider)
+		pricing_provider: PriceProvider = provider_map.get(provider) # type: ignore
 		if pricing_provider:
 			for set_code in args.set_codes:
 				print(f"Retrieving pricing for {set_code} from '{provider}' provider")
@@ -38,7 +41,8 @@ if __name__ == "__main__":
 					'db': DBPriceRecorder()
 				}
 				for recorder in args.recorders:
+					recorder: PriceRecorder
 					print(f"Recording using recorder '{recorder}'")
-					recorder = recorders.get(recorder)
+					recorder = recorders.get(recorder) # type: ignore
 					recorder.record_prices(set_pricing)
 					print(f"Finished writing pricing for {set_code} from '{provider}' provider with recorder '{recorder}'")

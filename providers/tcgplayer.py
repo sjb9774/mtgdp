@@ -11,11 +11,16 @@ class TcgPlayerPricing(PriceProvider):
 
 	def __init__(self):
 		super().__init__()
+		self.groups = {}
+		self.public_key = None
+		self.private_key = None
+		self.bearer_token = None
+
+	def set_credentials(self):
 		credentials = self.read_credentials()
 		self.public_key = credentials.get('public_key')
 		self.private_key = credentials.get('private_key')
 		self.groups = {}
-		self.bearer_token = None
 
 	def read_credentials(self) -> dict:
 		with open('credentials/tcgplayer.json', 'r') as f:
@@ -24,12 +29,14 @@ class TcgPlayerPricing(PriceProvider):
 
 	def get_pricing(
 		self,
-		card_name=None,
-		card_set=None,
-		multiverse_id=None,
-		printing_id=None,
+		card_name: str="",
+		card_set: str="",
+		multiverse_id: str="",
+		printing_id: str="",
 		**kwargs
 	) -> List[CardPriceSnapshot]:
+		if not self.public_key:
+			self.set_credentials()
 		now = datetime.datetime.now()
 		all_groups = self.get_all_groups()
 		specified_group = all_groups.get(card_set.upper())
@@ -42,7 +49,7 @@ class TcgPlayerPricing(PriceProvider):
 			products_map[card.get('productId')] = card
 		set_pricing = self.get_group_pricing(tcg_group_id)
 		pricing = []
-		for price in set_pricing.get('results'):
+		for price in set_pricing.get('results', []):
 			if products_map.get(price.get('productId')):
 				product = products_map[price.get('productId')]
 				collector_number = None

@@ -2,23 +2,23 @@ from db import Base, get_session
 from product.identity import ProductIdentity
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import raiseload
-from typing import Type
+from typing import Type, Optional
 
 
 class Repository:
 
-	def __init__(self, model_type: Type[Base] = None, identity_type: Type[ProductIdentity] = None):
+	def __init__(self, model_type: Type[Base], identity_type: Optional[Type[ProductIdentity]] = None):
 		self.model_type = model_type
 		self.identity_type = identity_type
 		self.active_session = None
 
-	def load_by_id(self, entity_id: int = None):
+	def load_by_id(self, entity_id: int):
 		session = get_session()
 		result = session.query(self.model_type).get(entity_id)
 		session.close()
 		return result
 
-	def load_by_fields(self, **kwargs) -> Base:
+	def load_by_fields(self, **kwargs) -> Optional[Base]:
 		session = get_session()
 		try:
 			result = session.query(self.model_type).filter_by(**kwargs).options(raiseload('*')).one()
@@ -30,7 +30,7 @@ class Repository:
 		return result
 
 	def get_fields(self):
-		return self.identity_type.get_identifying_fields()
+		return self.identity_type.get_identifying_fields() if self.identity_type else []
 
 	def manifest(self, **kwargs) -> Base:
 		result = self.load_by_fields(**kwargs)
